@@ -1,0 +1,80 @@
+version: '3'
+
+services:
+
+  nginx:
+    image: nginx:stable
+    ports:
+      - "80:80"
+    volumes:
+      - .:/app
+      - ./conf/nginx/conf.d/local.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - server
+
+  db:
+    image: postgres:11.6-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - .:/app
+      - ./postgres-data:/var/lib/postgresql/data
+
+  server:
+    build:
+      context: .
+      dockerfile: ./conf/docker/server/Dockerfile
+    env_file:
+      - $ENV
+    volumes:
+      - .:/app
+    command: >
+      bash -c "cd /app
+      && python apps/manage.py collectstatic --no-input
+      && python -m gunicorn --reload --timeout 240 -c conf/gunicorn_config.py apps.helper.wsgi"
+    depends_on:
+      - db
+#
+#  redis:
+#    image: redis:alpine
+#    command: redis-server /usr/local/etc/redis/redis.conf
+#    expose:
+#      - 6379
+#    volumes:
+#      - redis_data:/data
+#      - ./conf/redis/redis.conf:/usr/local/etc/redis/redis.conf
+#
+#  celery:
+#    build:
+#      context: .
+#      dockerfile: ./conf/docker/server/Dockerfile
+#    restart: always
+#    command: bash -c "cd /app/apps && celery -A tui worker -l error"
+#    volumes:
+#      - .:/app
+#    env_file:
+#      - $ENV
+#    depends_on:
+#      - db
+#      - redis
+#
+#  celery-beat:
+#    build:
+#      context: .
+#      dockerfile: ./conf/docker/server/Dockerfile
+#    restart: always
+#    command: bash -c "cd /app/apps && celery -A tui beat -l error --pidfile="
+#    volumes:
+#      - .:/app
+#    env_file:
+#      - $ENV
+#    depends_on:
+#      - db
+#      - redis
+#volumes:
+#  postgres_data:
+#  redis_data:
