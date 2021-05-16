@@ -41,7 +41,6 @@ dhparam/
 
 # media and static
 media/
-staticfiles/
 
 */.coverage
 /postgres-data/
