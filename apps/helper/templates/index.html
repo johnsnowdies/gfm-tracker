@@ -8,13 +8,14 @@
         <tr>
             <th scope="col">Онлайн</th>
             <th scope="col">Никнейм</th>
+            <th scope="col">Персонажи</th>
+            <th scope="col">Закрытые рейды</th>
             <th scope="col">Был в игре</th>
         </tr>
         </thead>
         <tbody>
         {% for item in data %}
-
-            <tr>
+            <tr {% if item.lost_warning %} class="bg-danger" {% endif %}>
                 <th scope="row">
                     {%  if item.is_online %}
                     <div class="status-circle online"></div>
@@ -24,10 +25,21 @@
                 </th>
                 <td>{{ item.display_name }}</td>
                 <td>
+                    {% for char in item.characters %}
+                        <span class="badge bg-primary" style="background-position: center;background-size: cover; height: 50px; font-size:14px; text-shadow: 1px 1px 3px #000; background-image: url('https://bungie.net/{{ char.emblem_background_path }}')">{{ char.class }} <br> {{ char.light }}</span>
+                    {% endfor %}
+                </td>
+
+                <td>
+                    {% for key, raid in item.raids.items %}
+                        <span><img width="50" height="50" src="https://bungie.net/{{ raid.image }}"> {{ raid.name }} - {{ raid.completion }}</span><br>
+                    {% endfor %}
+                </td>
+                <td>
                     {%  if item.is_online %}
                         сейчас
                     {% else %}
-                        {{ item.last_online|date:"d M Y" }}
+                        {{ item.last_online_text}}
                     {% endif %}
 
                 </td>
